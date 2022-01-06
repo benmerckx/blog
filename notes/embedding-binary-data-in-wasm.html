@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<title>Embedding binary data in WebAssembly</title>
+<link href="/assets/layout.css" rel="stylesheet" type="text/css" />
+<script defer src="/assets/highlight.js"></script>
+
+<header>
+  <a href=".." title="Home"><img src="/assets/back.svg" /></a>
+  <h1>Embedding binary data in WebAssembly</h1>
+  <time>2022-01-06</time>
+</header>
+
+<p>
+  There's a few ways to load binary data in JavaScript but most are platform
+  specific. For example the browser you can use <code>fetch</code>, in Node.js
+  the <code>fs</code> module. However with serverless environments which do not
+  support reading from the local filesystem it becomes harder. You can embed the
+  binary data in a base64 string, but it will add to the file size (important
+  when most have a 1MB script limit).
+</p>
+<p>
+  Most of those environments do support WebAssembly by means of a binary
+  <code>.wasm</code> file. I wrote the following Node.js script to embed
+  artibrary binary files in a <code>.wasm</code> file and export it.
+</p>
+
+<pre>
+import {readFileSync, writeFileSync} from 'fs'
+import {unsigned, signed} from 'leb128'
+
+const data = readFileSync(process.argv[2])
+
+function bin(strings, ...inserts) {
+  const res = []
+  strings.forEach(function (str, i) {
+    res.push(
+      Buffer.from(str.replace(/\/\/(.*?)\n/g, '').replace(/\s/g, ''), 'hex')
+    )
+    if (inserts[i]) res.push(inserts[i])
+  })
+  return Buffer.concat(res)
+}
+
+const size = unsigned.encode(data.length)
+const length = signed.encode(data.length)
+const globalL = unsigned.encode(5 + length.length)
+const dataL = unsigned.encode(5 + size.length + data.length)
+
+const buffer = bin`
+  00 61 73 6d                                         // WASM_BINARY_MAGIC
+  01 00 00 00                                         // WASM_BINARY_VERSION
+  05 03 01                                            // section "Memory" (5)
+  00 01                                               // memory 0
+  06 ${globalL} 01 7f 00 41 ${length} 0b              // section "Global" (6)
+  07 11 02 04 6461 7461 02 00 06 6c65 6e67 7468 03 00 // section "Export" (7)
+  0b ${dataL} 01                                      // section "Data" (11)
+  00 41 00 0b ${size}                                 // data segment header 0
+  ${data}                                             // data
+`
+
+writeFileSync(process.argv[3], buffer)
+</pre>
+
+<p>We can use the script to embed a file:</p>
+
+<pre>
+node script.mjs input.bin output.wasm
+</pre>
+
+<p>
+  The WebAssembly module exports <code>data</code> and
+  <code>length</code> properties by which you can retrieve the data:
+</p>
+
+<pre>
+import {data, length} from './output.wasm'
+const buffer = new Uint8Array(data.buffer, 0, length.value)
+</pre>
+
+<p>
+  Note that loading the wasm file in the snippet above uses the WebAssembly ES
+  Module integration proposal which is
+  <a href="loading-wasm.html">not supported everywhere yet</a>. Until it is,
+  base64 embedding data might be your only option.
+</p>
