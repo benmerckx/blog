@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<title>Loading WebAssembly modules</title>
+<link href="/assets/layout.css" rel="stylesheet" type="text/css" />
+<script defer src="/assets/highlight.js"></script>
+
+<header>
+  <a href=".." title="Home"><img src="/assets/back.svg" /></a>
+  <h1>Loading WebAssembly modules</h1>
+  <time>2021-01-06</time>
+</header>
+
+<p>
+  With the
+  <a
+    target="_blank"
+    rel="external"
+    href="https://github.com/WebAssembly/esm-integration"
+    >ES Module Integration proposal</a
+  >
+  not implemented everywhere yet, here's a comparison of how we can load
+  <code>.wasm</code>
+  modules in different runtimes and compilers. I'm using a wasm file that
+  exports a single function which returns an integer.
+</p>
+
+<pre>
+(module
+  (func $result (result i32) i32.const 42)
+  (export "result" (func $result))
+)
+</pre>
+
+<h2>Browser</h2>
+
+<p>
+  In the browser we can fetch (or use XMLHttpRequest) the wasm file contents and
+  instantiate.
+</p>
+
+<pre>
+fetch('result.wasm')
+  .then(response => response.arrayBuffer())
+  .then(bytes => WebAssembly.instantiate(bytes))
+  .then(({instance}) => console.log(instance.exports.result()))
+</pre>
+
+<h3>Bundlers</h3>
+
+<p>
+  Before your code reaches the browser it might go through a bundler, most of
+  which will try to bundle the wasm file next to the output js file.
+</p>
+
+<h4>Webpack</h4>
+
+<p>
+  Importing wasm modules is not enabled by default and needs an
+  <a
+    target="_blank"
+    rel="external"
+    href="https://webpack.js.org/configuration/experiments/"
+    >experimental flag (asyncWebAssembly)</a
+  >
+  to be set. With the flag enabled you can directly and dynamically import wasm
+  modules according to the proposal.
+</p>
+
+<pre>
+import {result} from './result.wasm' 
+console.log(result())
+import('./result.wasm')
+  .then(({result}) => console.log(result())) 
+</pre>
+
+<h4>Vite.js / Rollup</h4>
+
+<p>
+  In
+  <a
+    target="_blank"
+    rel="external"
+    href="https://vitejs.dev/guide/features.html#webassembly"
+    >Vite.js</a
+  >
+  and Rollup, using
+  <a
+    target="_blank"
+    rel="external"
+    href="https://www.npmjs.com/package/@rollup/plugin-wasm"
+    >@rollup/plugin-wasm</a
+  >, wasm modules have a default export which is an initialization function.
+</p>
+
+<pre>
+import init from './result.wasm'
+init()
+  .then(({result}) => console.log(result()))
+</pre>
+
+<h4>Esbuild</h4>
+
+<p>
+  Esbuild does not have a default wasm loader, but contains an
+  <a
+    target="_blank"
+    rel="external"
+    href="https://esbuild.github.io/plugins/#webassembly-plugin"
+  >
+    example plugin
+  </a>
+  in its documentation. Using the plugin allows you to load wasm the same way as
+  the Rollup example above (using a function as default export).
+</p>
+
+<h2>Node.js</h2>
+
+<p>
+  In Node.js, and serverless runtimes based on it (Netlify functions, AWS
+  Lambda, &hellip;), modules can be loaded either by reading the file or using
+  the experimental flag
+  <a
+    target="_blank"
+    rel="external"
+    href="https://nodejs.org/api/esm.html#wasm-modules"
+    ><code>--experimental-wasm-modules</code></a
+  >
+  (v12.3+) when running node.
+</p>
+
+<pre>
+WebAssembly.compile(require('fs').readFileSync('./result.wasm'))
+  .then(WebAssembly.instantiate)
+  .then(({exports}) => console.log(exports.result()))
+
+// With --experimental-wasm-modules
+import {result} from './result.wasm' 
+console.log(result())
+</pre>
+
+<h2>Cloudflare workers</h2>
+<p>
+  As explained in their
+  <a
+    target="_blank"
+    rel="external"
+    href="https://blog.cloudflare.com/workers-javascript-modules/#are-there-non-javascript-modules"
+    >blog post</a
+  >
+  on modules, with the correct settings (see the wrangler config at the end of
+  the page) the default export of <code>.wasm</code> imports will be a
+  <a
+    target="_blank"
+    rel="external"
+    href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Module/Module#synchronously_compiling_a_webassembly_module"
+    >WebAssembly.Module</a
+  >
+  which you can instantiate. For now it seems the <code>.mjs</code> extension is
+  required for your JavaScript modules. Dynamically loading a WebAssembly module
+  results in an error.
+</p>
+
+<pre>
+import module from './result.wasm' 
+const instance = await WebAssembly.instantiate(module)
+console.log(instance.exports.result())
+
+// Will error at runtime
+import('./result.wasm').catch(console.error) 
+</pre>
+
+<h2>Vercel (using Next.js)</h2>
+<p>
+  Vercel currently has two flavors of serverless JavaScript:
+  <a
+    target="_blank"
+    rel="external"
+    href="https://vercel.com/docs/concepts/functions/serverless-functions"
+    >serverless functions</a
+  >, which run Node.js via AWS Lambda, and
+  <a
+    target="_blank"
+    rel="external"
+    href="https://vercel.com/docs/concepts/functions/edge-functions"
+    >edge functions</a
+  >. In Next.js your api routes are run as serverless functions, so you have
+  access to the full Node.js api, while edge functions are used for middleware
+  and rendering React server components. Setting up Next.js to use WebAssembly
+  requires
+  <a
+    target="_blank"
+    rel="external"
+    href="https://github.com/vercel/next.js/blob/canary/examples/with-webassembly/next.config.js"
+    >a change</a
+  >
+  to their Webpack config.
+</p>
+
+<p>
+  The support for WebAssembly in Next.js 12 is unfortunately pretty bad. I was
+  unable to compile any api route containing WebAssembly imports, the compiler
+  simply hangs. Importing WebAssembly modules in React server components results
+  in cryptic errors:
+</p>
+
+<pre>
+error - Error: Your page must export a `default` component
+error - unhandledRejection: TypeError: Only absolute URLs are supported
+error - unhandledRejection: TypeError: Only absolute URLs are supported
+</pre>
+
+<p>
+  With Next.js 11 I'm able to import the WebAssembly exports directly. There's
+  no default export. Dynamically loading WebAssembly modules is supported. I'm
+  not able to test the Edge runtime because the features using it require
+  Next.js 12.
+</p>
+
+<pre>
+import {result} from './result.wasm' 
+console.log(result())
+import('./result.wasm')
+  .then(({result}) => console.log(result())) 
+</pre>
+
+<h1>Conclusion</h1>
+
+<p>
+  If, like me, you're trying to ship a Javascript package with some WebAssembly
+  that you'd like to be able to run almost anywhere the safest bet for now is
+  embedding the wasm file in a base64 encoded string. This makes you skip the
+  loading phase completely in exchange for a more bloated filesize.
+</p>
+
+<pre>
+const wasm =
+  'AGFzbQEAAAABBQFgAAF/AwIBAAcKAQZyZXN1bHQAAAoGAQQAQSoLABUEbmFtZQEJAQAGcmVzdWx0AgMBAAA='
+// Use a package like base64-arraybuffer here instead of atob to support all runtimes
+const bytes = Uint8Array.from(atob(wasm), c => c.charCodeAt(0))
+const module = new WebAssembly.Module(bytes)
+WebAssembly.instantiate(module)
+  .then(({exports}) => console.log(exports.result()))
+</pre>
