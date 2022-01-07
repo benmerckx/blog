@@ -4,8 +4,9 @@
 <link href="/assets/layout.css" rel="stylesheet" type="text/css" />
 <script defer src="/assets/highlight.js"></script>
 
+<a href=".." title="Home" class="link-home"></a>
+
 <header>
-  <a href=".." title="Home"><img src="/assets/back.svg" /></a>
   <h1>Loading WebAssembly modules</h1>
   <time>2022-01-06</time>
 </header>
@@ -222,7 +223,7 @@ import('./result.wasm')
   .then(({result}) => console.log(result())) 
 </pre>
 
-<h1>Conclusion</h1>
+<h2>Conclusion</h2>
 
 <p>
   If, like me, you're trying to ship a Javascript package with some WebAssembly
