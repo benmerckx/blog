@@ -45,12 +45,14 @@ const size = unsigned.encode(data.length)
 const length = signed.encode(data.length)
 const globalL = unsigned.encode(5 + length.length)
 const dataL = unsigned.encode(5 + size.length + data.length)
+const memoryPages = unsigned.encode(Math.ceil(data.length / 65536))
+const memoryL = unsigned.encode(2 + memoryPages.length)
 
 const buffer = bin`
   00 61 73 6d                                         // WASM_BINARY_MAGIC
   01 00 00 00                                         // WASM_BINARY_VERSION
-  05 03 01                                            // section "Memory" (5)
-  00 01                                               // memory 0
+  05 ${memoryL} 01                                    // section "Memory" (5)
+  00 ${memoryPages}                                   // memory 0
   06 ${globalL} 01 7f 00 41 ${length} 0b              // section "Global" (6)
   07 11 02 04 6461 7461 02 00 06 6c65 6e67 7468 03 00 // section "Export" (7)
   0b ${dataL} 01                                      // section "Data" (11)
