@@ -34,13 +34,12 @@
 }
 
 .link-home {
-  position: absolute;
-  top: 40px;
-  left: 26px;
-  width: 1.5rem;
-  height: 1.5rem;
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
   background-image: url("data:image/svg+xml,%3C%3Fxml version='1.0' encoding='UTF-8'%3F%3E%3C!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3E%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' version='1.1' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z' /%3E%3C/svg%3E");
   background-size: 100% 100%;
+  margin-bottom: 0.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -102,16 +101,13 @@ body {
   margin: 0 auto;
   max-width: 600px;
   padding: 2rem;
-  padding-bottom: 6rem;
-  border-radius: 6px;
-  overflow-x: hidden;
   word-break: break-word;
   overflow-wrap: break-word;
   background: var(--nc-bg-1);
 
   /* Main body text */
   color: var(--nc-tx-2);
-  font-size: 1.03rem;
+  font-size: 1rem;
   line-height: 1.5;
 }
 
@@ -210,22 +206,8 @@ blockquote *:last-child {
 }
 
 header {
-  padding: 6rem 1.25rem 2rem 1.5rem;
-
-  /* This sets the right and left margins to cancel out the body's margins. It's width is still the same, but the background stretches across the page's width. */
-
-  margin: -2rem calc(0px - (50vw - 50%)) 2rem;
-
-  /* Shorthand for:
-
-	margin-top: -2rem;
-	margin-bottom: 2rem;
-
-	margin-left: calc(0px - (50vw - 50%));
-	margin-right: calc(0px - (50vw - 50%)); */
-
-  padding-left: calc(50vw - 50%);
-  padding-right: calc(50vw - 50%);
+  position: relative;
+  padding: 1rem 0 2rem 0;
 }
 
 header h1,
@@ -315,10 +297,10 @@ kbd {
 }
 
 pre {
-  padding: 1rem 1.4rem;
+  padding: 1rem 2rem;
   max-width: 100%;
   overflow: auto;
-  margin: 0 -1.4rem 1rem -1.4rem;
+  margin: 0 -2rem 1rem -2rem;
 }
 
 pre code {
