@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<title>Why is my Next.js page dynamic?</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="/assets/layout.css" rel="stylesheet" type="text/css" />
+<script defer src="/assets/highlight.js"></script>
+
+<header>
+  <a href=".." title="Home" class="link-home"></a>
+  <h1>Why is my Next.js page dynamic?</h1>
+  <time>2024-01-31</time>
+</header>
+
+<p>
+  After building a Next.js project it will provide you with a nice overview of
+  all the pages it built. At times you might look surprised to see some pages
+  marked as dynamic. Next.js contains a number of small implicit rules that
+  determine whether a page is dynamic or not. To save you and me some time here
+  they are (as of Next.js version 13 and 14):
+</p>
+
+<h2>Dynamic params</h2>
+<p>
+  It's possible to define parameters in route paths, such as
+  <code>[id]</code> in a route named <code>/post/[id]</code>. Because Next.js
+  cannot figure out all the possible values of <code>id</code> it will
+  dynamically render the page when a request comes in. To avoid this you can
+  define a <code>generateStaticParams</code> function and export it from the
+  page. This function needs to return an array of all the possible values of
+  <code>id</code>.
+</p>
+
+<p>
+  But just using <code>generateStaticParams</code> is not entirely enough.
+  Next.js might encounter a value being passed that was not found in the array
+  while the server is running and attempt to render it at runtime. You can force
+  it to accept only the values that you supply by exporting a variable named
+  <code>dynamicParams</code> and setting it to <code>false</code>.
+</p>
+
+<p>
+  <a
+    target="_blank"
+    rel="nofollow"
+    href="https://nextjs.org/docs/app/api-reference/functions/generate-static-params"
+  >
+    See docs
+  </a>
+</p>
+
+<pre>
+  // This is optimal
+  export const dynamicParams = false
+  export async function generateStaticParams() {
+    return [
+      {id: 'a'},
+      {id: 'b'}
+    ]
+  }
+</pre>
+
+<h2>searchParams</h2>
+
+<p>
+  The second argument of a page server component contains the search params from
+  the url. Simply accessing it triggers the dynamic flag.
+</p>
+
+<p>
+  <a
+    target="_blank"
+    rel="nofollow"
+    href="https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional"
+  >
+    See docs
+  </a>
+</p>
+
+<pre>
+  export default function Page({
+    searchParams // This line triggers dynamic
+  }) {
+    return &lt;h1&gt;My Page&lt;/h1&gt;
+  }
+</pre>
+
+<h2>cookies &amp; headers</h2>
+<p>
+  Accessing <code>cookies()</code> or <code>headers()</code> inside a Server
+  component triggers dynamic.
+</p>
+
+<p>
+  <a
+    target="_blank"
+    rel="nofollow"
+    href="https://nextjs.org/docs/app/api-reference/functions/cookies"
+  >
+    See docs
+  </a>
+</p>
+
+<pre>
+  import {cookies} from 'next/headers'
+  cookies().get('test') // This line triggers dynamic
+</pre>
+
+<h2>Fetch cache</h2>
+
+<p>
+  Using a value of <code>'no-store'</code> or <code>'no-cache'</code> in the
+  options you pass to the <code>fetch()</code> function will trigger dynamic.
+</p>
+
+<p>
+  <a
+    target="_blank"
+    rel="nofollow"
+    href="https://nextjs.org/docs/app/building-your-application/data-fetching/fetching-caching-and-revalidating#opting-out-of-data-caching"
+  >
+    See docs
+  </a>
+</p>
+
+<pre>
+  await fetch('https://example.com', {
+    cache: 'no-store' // This line triggers dynamic
+  })
+</pre>
+
+<h2>draftMode</h2>
+
+<p>
+  A special mention to <code>draftMode</code> which does
+  <strong>not</strong> trigger dynamic. You can safely call and check the
+  <code>isEnabled</code>
+  flag and your page will still be built statically.
+</p>
+
+<pre>
+  import {draftMode} from 'next/headers'
+  draftMode().isEnabled // This is fine
+</pre>
+
+<p>
+  <a
+    target="_blank"
+    rel="nofollow"
+    href="https://nextjs.org/docs/app/api-reference/functions/draft-mode"
+  >
+    See docs
+  </a>
+</p>
+
+<h2>Forcing dynamic mode</h2>
+
+<p>
+  If your page shows up as static but you want to force data to be fetched
+  whenever a request comes you can export the <code>dynamic</code> setting with
+  a value of <code>'force-dynamic'</code>.
+</p>
+
+<p>
+  <a
+    target="_blank"
+    rel="nofollow"
+    href="https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamic"
+  >
+    See docs
+  </a>
+</p>
+
+<pre>
+  export const dynamic = 'force-dynamic'
+</pre>
+
+<h2>Erroring on dynamic</h2>
+
+<p>
+  If you want to be sure a page is only ever rendered statically you can add the
+  <code>dynamic</code> setting with a value of <code>'error'</code>. This will
+  provide you with a warning at build time if any of the above conditions are
+  met.
+</p>
+
+<p>
+  <a
+    target="_blank"
+    rel="nofollow"
+    href="https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamic"
+  >
+    See docs
+  </a>
+</p>
+
+<pre>
+  export const dynamic = 'error'
+</pre>
