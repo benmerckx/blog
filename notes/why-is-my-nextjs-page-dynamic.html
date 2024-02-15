@@ -59,7 +59,7 @@
   }
 </pre>
 
-<h2>searchParams</h2>
+<h2>searchParams (server side)</h2>
 
 <p>
   The second argument of a page server component contains the search params from
@@ -76,12 +76,30 @@
   </a>
 </p>
 
+<h2>useSearchParams (client side)</h2>
+
+<p>
+  Using the <code>useSearchParams</code> hook in a client side component without
+  a <code>Suspense</code> boundary triggers dynamic.
+</p>
+
+<p>
+  <a
+    target="_blank"
+    rel="nofollow"
+    href="https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout"
+  >
+    See docs
+  </a>
+</p>
+
 <pre>
-  export default function Page({
-    searchParams // This line triggers dynamic
-  }) {
-    return &lt;h1&gt;My Page&lt;/h1&gt;
-  }
+  export function SomeClientComponent() {
+    // This line triggers dynamic if &lt;SomeClientComponent /&gt; 
+    // is not wrapped in a &lt;Suspense&gt; boundary
+    const searchParams = useSearchParams() 
+    return &lt;h1&gt;Client component&lt;/h1&gt;
+  })
 </pre>
 
 <h2>cookies &amp; headers</h2>
