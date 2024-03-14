@@ -49,14 +49,14 @@
 </p>
 
 <pre>
-  // This is optimal
-  export const dynamicParams = false
-  export async function generateStaticParams() {
-    return [
-      {id: 'a'},
-      {id: 'b'}
-    ]
-  }
+// This is optimal
+export const dynamicParams = false
+export async function generateStaticParams() {
+  return [
+    {id: 'a'},
+    {id: 'b'}
+  ]
+}
 </pre>
 
 <h2>searchParams (server side)</h2>
@@ -77,13 +77,13 @@
 </p>
 
 <pre>
-  <!--
-  export default function Page({
-    searchParams // This line triggers dynamic
-  }) {
-    return <h1>My Page</h1>
-  }
-  --> 
+<!--
+export default function Page({
+  searchParams // This line triggers dynamic
+}) {
+  return <h1>My Page</h1>
+}
+--> 
 </pre>
 
 <h2>useSearchParams (client side)</h2>
@@ -104,14 +104,14 @@
 </p>
 
 <pre>
-  <!--
-  export function SomeClientComponent() {
-    // This line triggers dynamic if <SomeClientComponent /> 
-    // is not wrapped in a <Suspense> boundary
-    const searchParams = useSearchParams() 
-    return <h1>Client component</h1>
-  })
-  -->
+<!--
+export function SomeClientComponent() {
+  // This line triggers dynamic if <SomeClientComponent /> 
+  // is not wrapped in a <Suspense> boundary
+  const searchParams = useSearchParams() 
+  return <h1>Client component</h1>
+})
+-->
 </pre>
 
 <h2>cookies &amp; headers</h2>
@@ -131,8 +131,8 @@
 </p>
 
 <pre>
-  import {cookies} from 'next/headers'
-  cookies().get('test') // This line triggers dynamic
+import {cookies} from 'next/headers'
+cookies().get('test') // This line triggers dynamic
 </pre>
 
 <h2>Fetch cache</h2>
@@ -158,9 +158,9 @@
 </p>
 
 <pre>
-  await fetch('https://example.com', {
-    cache: 'no-store' // This line triggers dynamic
-  })
+await fetch('https://example.com', {
+  cache: 'no-store' // This line triggers dynamic
+})
 </pre>
 
 <h2>draftMode</h2>
@@ -173,8 +173,8 @@
 </p>
 
 <pre>
-  import {draftMode} from 'next/headers'
-  draftMode().isEnabled // This is fine
+import {draftMode} from 'next/headers'
+draftMode().isEnabled // This is fine
 </pre>
 
 <p>
@@ -206,7 +206,7 @@
 </p>
 
 <pre>
-  export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic'
 </pre>
 
 <h2>Erroring on dynamic</h2>
@@ -229,5 +229,5 @@
 </p>
 
 <pre>
-  export const dynamic = 'error'
+export const dynamic = 'error'
 </pre>

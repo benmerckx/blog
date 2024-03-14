@@ -7,6 +7,6 @@ for (const pre of document.querySelectorAll('pre')) {
   const innerComment = Array.from(pre.childNodes).find(
     node => node.nodeType === 8
   )
-  if (innerComment) pre.textContent = innerComment.nodeValue
+  if (innerComment) pre.textContent = innerComment.nodeValue.trim()
   lolight.el(pre)
 }
