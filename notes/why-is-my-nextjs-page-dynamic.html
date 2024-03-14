@@ -77,11 +77,13 @@
 </p>
 
 <pre>
+  <!--
   export default function Page({
     searchParams // This line triggers dynamic
   }) {
-    return &lt;h1&gt;My Page&lt;/h1&gt;
+    return <h1>My Page</h1>
   }
+  --> 
 </pre>
 
 <h2>useSearchParams (client side)</h2>
@@ -102,12 +104,14 @@
 </p>
 
 <pre>
+  <!--
   export function SomeClientComponent() {
-    // This line triggers dynamic if &lt;SomeClientComponent /&gt; 
-    // is not wrapped in a &lt;Suspense&gt; boundary
+    // This line triggers dynamic if <SomeClientComponent /> 
+    // is not wrapped in a <Suspense> boundary
     const searchParams = useSearchParams() 
-    return &lt;h1&gt;Client component&lt;/h1&gt;
+    return <h1>Client component</h1>
   })
+  -->
 </pre>
 
 <h2>cookies &amp; headers</h2>
